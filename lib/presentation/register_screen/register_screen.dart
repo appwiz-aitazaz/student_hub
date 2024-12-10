@@ -1,142 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:student_hub/widgets/header_design.dart';
 import '../../core/app_export.dart';
 import '../../theme/custom_button_style.dart';
 import '../../widgets/custom_elevated_button.dart';
 import '../../widgets/custom_text_from_field.dart';
 
+class RegisterScreen extends StatelessWidget {
+  RegisterScreen({Key? key}) : super(key: key);
 
-class RegisterScreen extends StatelessWidget{
-    RegisterScreen({Key? key})
-      : super(
-         key: key
-        );
+  // Controllers for form fields
+  final TextEditingController fullNameInputController = TextEditingController();
+  final TextEditingController emailInputController = TextEditingController();
+  final TextEditingController passwordInputController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
 
-  TextEditingController fullNameInputController = TextEditingController();
-
-  TextEditingController emailInputController = TextEditingController();
-
-  TextEditingController passwordInputController = TextEditingController();
-
-  TextEditingController confirmPasswordController = TextEditingController();
-
-  GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  // Form key for validation
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   @override
-  Widget build(BuildContext context){
+  Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
         body: Form(
           key: _formKey,
-          child: SizedBox(
-            width: double.maxFinite,
-            child:SingleChildScrollView(
-              child: SizedBox(
-                width: double.maxFinite,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                   SizedBox(
-                      height: 162.h,
-                      width: 202.h,
-                      child: Stack(
-                        alignment: Alignment.centerLeft,
-                        children: [
-                          CustomImageView(
-                            imagePath: ImageConstant.imgEllipse2,
-                            height: 162.h,
-                            width: 146.h,
-                            alignment: Alignment.topLeft,
-                        ),
-                        CustomImageView(
-                          imagePath: ImageConstant.imgEllipse3,
-                          height: 106.h,
-                          width: double.maxFinite,
-                          alignment: Alignment.topRight,
-                        ),
-                      ],
-                    ),
-                   ),
-                   SizedBox(height: 14.h),
-                   Container(
-                      width: double.maxFinite,
-                      margin: EdgeInsets.only(
-                        left: 26.h,
-                        right: 38.h,
-                      ),
-                      child: Column(
-                        children: [
-                          SizedBox(
-                            width: double.maxFinite,
-                            child: Column(
-                              children: [
-                                Text(
-                                  "Welcome to StudentHub!",
-                                  style: CustomTextStyles.headlineSmallInikaBlack900,
-                                ),
-                                SizedBox(height: 80.h),
-                                _buildFullNameInput(context),
-                                 SizedBox(height: 36.h),
-                                _buildEmailInput(context),
-                                 SizedBox(height: 36.h),
-                                _buildPasswordInput(context),
-                                 SizedBox(height: 40.h),
-                                _buildConfirmPasswordInput(context),
-                                 SizedBox(height: 88.h),
-                                _buildRegisterButton(context),
-                                 SizedBox(height: 12.h),
-                                 Align(
-                                  alignment: Alignment.centerRight,
-                                  child: Container(
-                                    height: 18.h,
-                                    width: 208.h,
-                                    margin: EdgeInsets.only(right: 26.h),
-                                    child: Stack(
-                                      alignment: Alignment.center,
-                                      children: [
-                                        Align(
-                                          alignment: Alignment.centerLeft,
-                                          child: Container(
-                                            height: 1.h,
-                                            width: 1.h,
-                                            margin: EdgeInsets.only(left: 36.h),
-                                            decoration: BoxDecoration(
-                                              color: appTheme.blueGray100,
-                                            ),
-                                          ),
-                                        ),
-                                        GestureDetector(
-                                          onTap: () {},
-                                          child: RichText(
-                                            text: TextSpan(
-                                              children: [
-                                                TextSpan(
-                                                  text:
-                                                     "Already have an account?" ,
-                                                  style: CustomTextStyles.bodyMediumImprimaBlack90014,
-                                                ),
-                                                TextSpan(
-                                                  text: " Sign in",
-                                                  style: theme.textTheme.titleSmall,
-                                                ),
-                                              ],
-                                            ),
-                                            textAlign: TextAlign.left,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                       ],
-                      ),
-                    ),
-                    SizedBox(height: 38.h),
-                  ],
-                ),
-              ),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                HeaderDesign(),
+                _buildContent(context),
+              ],
             ),
           ),
         ),
@@ -144,72 +38,110 @@ class RegisterScreen extends StatelessWidget{
     );
   }
 
-  ///Section Widget
-  Widget _buildFullNameInput (BuildContext context) {
-     return CustomTextFormField(
-      controller: fullNameInputController,
-      hintText: "Enter your full Name",
-      contentPadding: EdgeInsets.symmetric(
-        horizontal: 18.h,
-       vertical: 14.h,
-     ),
+  /// Main content section with inputs and buttons
+  Widget _buildContent(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 26.h).copyWith(right: 38.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          SizedBox(
+            height: 50.h,
+          ),
+          Text(
+            "Welcome to StudentHub!",
+            style: CustomTextStyles.headlineSmallInikaBlack900,
+          ),
+          SizedBox(height: 40.h),
+          _buildFullNameInput(),
+          SizedBox(height: 36.h),
+          _buildEmailInput(),
+          SizedBox(height: 36.h),
+          _buildPasswordInput(),
+          SizedBox(height: 40.h),
+          _buildConfirmPasswordInput(),
+          SizedBox(height: 50.h),
+          _buildRegisterButton(),
+          SizedBox(height: 22.h),
+          _buildSignInLink(context),
+          SizedBox(height: 38.h),
+        ],
+      ),
     );
   }
 
-  /// Section Widget
-  Widget _buildEmailInput (BuildContext context) {
+  /// Full name input field
+  Widget _buildFullNameInput() {
+    return CustomTextFormField(
+      controller: fullNameInputController,
+      hintText: "Enter your full Name",
+      contentPadding: EdgeInsets.symmetric(horizontal: 18.h, vertical: 14.h),
+    );
+  }
+
+  /// Email input field
+  Widget _buildEmailInput() {
     return CustomTextFormField(
       controller: emailInputController,
       hintText: "Enter your email",
       textInputType: TextInputType.emailAddress,
-      contentPadding: EdgeInsets.symmetric(
-        horizontal: 18.h,
-        vertical: 14.h,
-      ),
+      contentPadding: EdgeInsets.symmetric(horizontal: 18.h, vertical: 14.h),
     );
   }
 
-  ///Section Widget
-  Widget _buildPasswordInput (BuildContext context) {
-     return CustomTextFormField(
+  /// Password input field
+  Widget _buildPasswordInput() {
+    return CustomTextFormField(
       controller: passwordInputController,
       hintText: "Enter your password",
       textInputType: TextInputType.visiblePassword,
       obscureText: true,
-      contentPadding: EdgeInsets.symmetric(
-        horizontal: 18.h,
-       vertical: 14.h,
-     ),
+      contentPadding: EdgeInsets.symmetric(horizontal: 18.h, vertical: 14.h),
     );
   }
 
-  /// Section Widget
-  Widget _buildConfirmPasswordInput (BuildContext context) {
+  /// Confirm password input field
+  Widget _buildConfirmPasswordInput() {
     return CustomTextFormField(
       controller: confirmPasswordController,
-      hintText: " Confirm Password",
-      textInputAction: TextInputAction.done,
+      hintText: "Confirm Password",
       textInputType: TextInputType.visiblePassword,
       obscureText: true,
-      contentPadding: EdgeInsets.symmetric(
-        horizontal: 18.h,
-        vertical: 14.h,
-      ),
-    );
-  }
-  /// Section Widget
-  Widget _buildRegisterButton (BuildContext context) {
-    return CustomElevatedButton(
-      text: "Register",
-      margin: EdgeInsets.only(
-        left: 26.h,
-        right: 32.h,
-      ),
+      textInputAction: TextInputAction.done,
+      contentPadding: EdgeInsets.symmetric(horizontal: 18.h, vertical: 14.h),
     );
   }
 
-  /// Navigates to the loginScreen when the action is triggered.
-  onTapTxtAlreadyhaveanaccount (BuildContext context) {
-  Navigator.pushNamed (context, AppRoutes.loginScreen);
+  /// Register button
+  Widget _buildRegisterButton() {
+    return CustomElevatedButton(
+      text: "Register",
+      margin: EdgeInsets.symmetric(horizontal: 26.h).copyWith(right: 32.h),
+    );
+  }
+
+  /// Sign-in link
+  Widget _buildSignInLink(BuildContext context) {
+    return Align(
+      alignment: Alignment.center,
+      child: GestureDetector(
+        onTap: () => Navigator.pushNamed(context, AppRoutes.loginScreen),
+        child: RichText(
+          text: TextSpan(
+            children: [
+              TextSpan(
+                text: "Already have an account?",
+                style: CustomTextStyles.bodyMediumImprimaBlack90014,
+              ),
+              TextSpan(
+                text: " Sign in",
+                style: theme.textTheme.titleSmall,
+              ),
+            ],
+          ),
+          textAlign: TextAlign.left,
+        ),
+      ),
+    );
   }
 }
