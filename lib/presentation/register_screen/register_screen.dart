@@ -1,22 +1,81 @@
 import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
 import 'package:student_hub/widgets/header_design.dart';
 import '../../core/app_export.dart';
 import '../../theme/custom_button_style.dart';
 import '../../widgets/custom_elevated_button.dart';
-import '../../widgets/custom_text_from_field.dart';
+import '../../widgets/custom_text_form_field.dart';
 
-class RegisterScreen extends StatelessWidget {
-  RegisterScreen({Key? key}) : super(key: key);
+class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({Key? key}) : super(key: key);
 
-  // Controllers for form fields
-  final TextEditingController fullNameInputController = TextEditingController();
-  final TextEditingController emailInputController = TextEditingController();
-  final TextEditingController passwordInputController = TextEditingController();
-  final TextEditingController confirmPasswordController =
-      TextEditingController();
+  @override
+  _RegisterScreenState createState() => _RegisterScreenState();
+}
 
-  // Form key for validation
+class _RegisterScreenState extends State<RegisterScreen> {
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
+  final TextEditingController usernameController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController confirmPasswordController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  bool _isLoading = false;
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
+
+  void _showSnackBar(String message, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: color,
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  Future<void> _register(BuildContext context) async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final dio = Dio();
+      final response = await dio.post(
+        'https://studenthub-backend.fly.dev/api/v1/register',
+        data: {
+          'fullName': nameController.text.trim(),
+          'email': emailController.text.trim(),
+          'phone': phoneController.text.trim(),
+          'username': usernameController.text.trim(),
+          'password': passwordController.text,
+          'confirmPassword': confirmPasswordController.text,
+        },
+      );
+
+      setState(() => _isLoading = false);
+
+      if (response.statusCode == 200) {
+        _showSnackBar("Registration Successful", Colors.green);
+        Navigator.pushReplacementNamed(context, AppRoutes.loginScreen);
+      } else {
+        final errorMsg = response.data['message'] ?? "An unknown error occurred.";
+        _showSnackBar("Registration Failed: $errorMsg", Colors.red);
+      }
+    } on DioException catch (e) {
+      final errorMsg = e.response?.data['message'] ?? "Network Error";
+      _showSnackBar("Registration Failed: $errorMsg", Colors.red);
+    } catch (e) {
+      _showSnackBar("Unexpected Error. Please try again.", Colors.red);
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,104 +83,183 @@ class RegisterScreen extends StatelessWidget {
       child: Scaffold(
         body: Form(
           key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                HeaderDesign(),
-                _buildContent(context),
-              ],
-            ),
+          child: Stack(
+            children: [
+              SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    HeaderDesign(),
+                    _buildContent(context),
+                  ],
+                ),
+              ),
+              if (_isLoading)
+                const Center(
+                  child: CircularProgressIndicator(),
+                ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  /// Main content section with inputs and buttons
   Widget _buildContent(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 26.h).copyWith(right: 38.h),
+      padding: const EdgeInsets.symmetric(horizontal: 26.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          SizedBox(
-            height: 50.h,
-          ),
+          const SizedBox(height: 50.0),
           Text(
-            "Welcome to StudentHub!",
+            "Create an Account",
             style: CustomTextStyles.headlineSmallInikaBlack900,
           ),
-          SizedBox(height: 40.h),
-          _buildFullNameInput(),
-          SizedBox(height: 36.h),
+          const SizedBox(height: 40.0),
+          _buildNameInput(),
+          const SizedBox(height: 20.0),
           _buildEmailInput(),
-          SizedBox(height: 36.h),
+          const SizedBox(height: 20.0),
+          _buildPhoneInput(),
+          const SizedBox(height: 20.0),
+          _buildUsernameInput(),
+          const SizedBox(height: 20.0),
           _buildPasswordInput(),
-          SizedBox(height: 40.h),
+          const SizedBox(height: 20.0),
           _buildConfirmPasswordInput(),
-          SizedBox(height: 50.h),
-          _buildRegisterButton(),
-          SizedBox(height: 22.h),
-          _buildSignInLink(context),
-          SizedBox(height: 38.h),
+          const SizedBox(height: 50.0),
+          _buildRegisterButton(context),
+          const SizedBox(height: 22.0),
+          _buildLoginLink(context),
+          const SizedBox(height: 38.0),
         ],
       ),
     );
   }
 
-  /// Full name input field
-  Widget _buildFullNameInput() {
+  Widget _buildNameInput() {
     return CustomTextFormField(
-      controller: fullNameInputController,
-      hintText: "Enter your full Name",
-      contentPadding: EdgeInsets.symmetric(horizontal: 18.h, vertical: 14.h),
+      controller: nameController,
+      hintText: "Enter your full name",
+      textInputType: TextInputType.text,
+      validator: (value) =>
+          value == null || value.isEmpty ? "Full Name is required" : null,
+      contentPadding:
+          const EdgeInsets.symmetric(horizontal: 18.0, vertical: 14.0),
     );
   }
 
-  /// Email input field
   Widget _buildEmailInput() {
     return CustomTextFormField(
-      controller: emailInputController,
+      controller: emailController,
       hintText: "Enter your email",
       textInputType: TextInputType.emailAddress,
-      contentPadding: EdgeInsets.symmetric(horizontal: 18.h, vertical: 14.h),
+      validator: (value) {
+        if (value == null || value.isEmpty) return "Email is required";
+        final emailRegex = RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$");
+        if (!emailRegex.hasMatch(value)) return "Enter a valid email";
+        return null;
+      },
+      contentPadding:
+          const EdgeInsets.symmetric(horizontal: 18.0, vertical: 14.0),
     );
   }
 
-  /// Password input field
+  Widget _buildPhoneInput() {
+    return CustomTextFormField(
+      controller: phoneController,
+      hintText: "Enter your phone number (e.g., +1234567890)",
+      textInputType: TextInputType.phone,
+      validator: (value) {
+        if (value == null || value.isEmpty) return "Phone number is required";
+        final phoneRegex = RegExp(r"^\+\d{10,15}$");
+        if (!phoneRegex.hasMatch(value)) return "Enter a valid phone number";
+        return null;
+      },
+      contentPadding:
+          const EdgeInsets.symmetric(horizontal: 18.0, vertical: 14.0),
+    );
+  }
+
+  Widget _buildUsernameInput() {
+    return CustomTextFormField(
+      controller: usernameController,
+      hintText: "Enter your username",
+      textInputType: TextInputType.text,
+      validator: (value) =>
+          value == null || value.isEmpty ? "Username is required" : null,
+      contentPadding:
+          const EdgeInsets.symmetric(horizontal: 18.0, vertical: 14.0),
+    );
+  }
+
   Widget _buildPasswordInput() {
     return CustomTextFormField(
-      controller: passwordInputController,
+      controller: passwordController,
       hintText: "Enter your password",
       textInputType: TextInputType.visiblePassword,
-      obscureText: true,
-      contentPadding: EdgeInsets.symmetric(horizontal: 18.h, vertical: 14.h),
+      obscureText: _obscurePassword,
+      validator: (value) {
+        if (value == null || value.isEmpty) return "Password is required";
+        if (value.length < 8) return "Password must be at least 8 characters";
+        if (!RegExp(r'[A-Za-z]').hasMatch(value)) return "Include letters";
+        if (!RegExp(r'\d').hasMatch(value)) return "Include digits";
+        if (!RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(value)) return "Include symbols";
+        return null;
+      },
+      contentPadding:
+          const EdgeInsets.symmetric(horizontal: 18.0, vertical: 14.0),
+      suffix: IconButton(
+        icon: Icon(
+          _obscurePassword ? Icons.visibility_off : Icons.visibility,
+          color: Colors.grey,
+        ),
+        onPressed: () {
+          setState(() {
+            _obscurePassword = !_obscurePassword;
+          });
+        },
+      ),
     );
   }
 
-  /// Confirm password input field
   Widget _buildConfirmPasswordInput() {
     return CustomTextFormField(
       controller: confirmPasswordController,
-      hintText: "Confirm Password",
+      hintText: "Confirm your password",
       textInputType: TextInputType.visiblePassword,
-      obscureText: true,
-      textInputAction: TextInputAction.done,
-      contentPadding: EdgeInsets.symmetric(horizontal: 18.h, vertical: 14.h),
+      obscureText: _obscureConfirmPassword,
+      validator: (value) {
+        if (value == null || value.isEmpty) return "Confirm password is required";
+        if (value != passwordController.text) return "Passwords do not match";
+        return null;
+      },
+      contentPadding:
+          const EdgeInsets.symmetric(horizontal: 18.0, vertical: 14.0),
+      suffix: IconButton(
+        icon: Icon(
+          _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
+          color: Colors.grey,
+        ),
+        onPressed: () {
+          setState(() {
+            _obscureConfirmPassword = !_obscureConfirmPassword;
+          });
+        },
+      ),
     );
   }
 
-  /// Register button
-  Widget _buildRegisterButton() {
+  Widget _buildRegisterButton(BuildContext context) {
     return CustomElevatedButton(
       text: "Register",
-      margin: EdgeInsets.symmetric(horizontal: 26.h).copyWith(right: 32.h),
+      margin: const EdgeInsets.symmetric(horizontal: 26.0),
+      onPressed: () => _register(context),
     );
   }
 
-  /// Sign-in link
-  Widget _buildSignInLink(BuildContext context) {
+  Widget _buildLoginLink(BuildContext context) {
     return Align(
       alignment: Alignment.center,
       child: GestureDetector(
@@ -134,12 +272,11 @@ class RegisterScreen extends StatelessWidget {
                 style: CustomTextStyles.bodyMediumImprimaBlack90014,
               ),
               TextSpan(
-                text: " Sign in",
-                style: theme.textTheme.titleSmall,
+                text: " Log in",
+                style: Theme.of(context).textTheme.titleSmall,
               ),
             ],
           ),
-          textAlign: TextAlign.left,
         ),
       ),
     );
